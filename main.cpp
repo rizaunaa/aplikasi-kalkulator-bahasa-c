@@ -1,5 +1,7 @@
 #include <windows.h>
+#include "fungsi/display/display.h"
 
+// Menangani event utama window, termasuk proses gambar ulang.
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_SIZE:
@@ -11,7 +13,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             RECT rect;
             GetClientRect(hwnd, &rect);
-            DrawTextA(hdc, "Homebase", -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DisplayAngka(hdc, rect, "1234567890");
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -24,6 +26,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     }
 }
 
+// Membuat window aplikasi lalu menjalankan message loop.
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     const char CLASS_NAME[] = "EmptyWindowClass";
 
