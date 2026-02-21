@@ -1,0 +1,27 @@
+# Build output
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.idb
+*.lib
+*.exp
+
+# VS build cache
+*.tlog
+*.lastbuildstate
+*.log
+
+# Folder build umum
+Debug/
+Release/
+x64/
+x86/
+build/
+
+# Opsional: kalau tidak mau commit setting lokal VS Code
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+.vscode/*
