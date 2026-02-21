@@ -2,13 +2,16 @@
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+        case WM_SIZE:
+            InvalidateRect(hwnd, nullptr, TRUE);
+            return 0;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
             RECT rect;
             GetClientRect(hwnd, &rect);
-            DrawTextW(hdc, L"Homebase", -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawTextA(hdc, "Homebase", -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -22,20 +25,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
-    const wchar_t CLASS_NAME[] = L"EmptyWindowClass";
+    const char CLASS_NAME[] = "EmptyWindowClass";
 
-    WNDCLASSW wc = {};
+    WNDCLASSA wc = {};
+    wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 
-    RegisterClassW(&wc);
+    RegisterClassA(&wc);
 
-    HWND hwnd = CreateWindowExW(
+    HWND hwnd = CreateWindowExA(
         0,
         CLASS_NAME,
-        L"Kalkulator",
+        "Kalkulator",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
@@ -51,7 +56,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         return 0;
     }
 
+    SetWindowTextA(hwnd, "Kalkulator");
     ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
 
     MSG msg = {};
     while (GetMessage(&msg, nullptr, 0, 0) > 0) {
