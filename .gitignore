@@ -25,3 +25,6 @@ build/
 !.vscode/tasks.json
 !.vscode/extensions.json
 .vscode/*
+
+#ai
+*.md
