@@ -84,6 +84,13 @@ void ProsesAksiKalkulator(HWND hwnd, int id) {
 
 // Menangani event keyboard keydown agar switch-case utama lebih sederhana.
 LRESULT TanganiKeyDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    // Shortcut Ctrl+L untuk menghapus seluruh history dengan cepat.
+    if (wParam == 'L' && (GetKeyState(VK_CONTROL) & 0x8000) != 0) {
+        BersihkanHistory();
+        InvalidateRect(hwnd, nullptr, TRUE);
+        return 0;
+    }
+
     const int id = AmbilIdTombolDariKeyDown(wParam);
     if (id != 0) {
         ProsesAksiKalkulator(hwnd, id);

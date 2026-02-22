@@ -1,5 +1,7 @@
 #include "history.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <commctrl.h>
 #include <string>
@@ -25,6 +27,7 @@ HFONT gHistoryFont = nullptr;
 
 constexpr int kHistoryPanelWidth = 320;
 constexpr int kPanelMargin = 12;
+constexpr std::size_t kMaksJumlahHistory = 100;
 
 // Membuat font panel history agar konsisten dengan komponen lain.
 HFONT BuatFontHistory(HWND parent) {
@@ -48,6 +51,43 @@ HFONT BuatFontHistory(HWND parent) {
         DEFAULT_PITCH | FF_SWISS,
         "Segoe UI"
     );
+}
+
+// Menghapus spasi berlebih di awal dan akhir teks.
+std::string Trim(const std::string& text) {
+    const auto begin = std::find_if_not(text.begin(), text.end(), [](unsigned char c) {
+        return std::isspace(c) != 0;
+    });
+    if (begin == text.end()) {
+        return "";
+    }
+    const auto end = std::find_if_not(text.rbegin(), text.rend(), [](unsigned char c) {
+        return std::isspace(c) != 0;
+    }).base();
+    return std::string(begin, end);
+}
+
+// Menormalisasi teks ekspresi agar operator konsisten untuk tampilan history.
+std::string FormatEkspresiHistory(const std::string& ekspresi) {
+    std::string hasil = Trim(ekspresi);
+    for (char& c : hasil) {
+        if (c == '*') {
+            c = 'x';
+        }
+    }
+    return hasil;
+}
+
+// Menormalisasi teks hasil agar tidak ada spasi tidak perlu.
+std::string FormatHasilHistory(const std::string& hasil) {
+    return Trim(hasil);
+}
+
+// Memastikan jumlah item history tidak melebihi batas yang ditentukan.
+void TerapkanBatasHistory() {
+    while (gDaftarHistory.size() > kMaksJumlahHistory) {
+        gDaftarHistory.erase(gDaftarHistory.begin());
+    }
 }
 
 // Mengisi ulang konten ListView dari data history saat ini.
@@ -186,7 +226,14 @@ int AmbilLebarHistoryPanel() {
 
 // Menambahkan satu baris riwayat operasi.
 void TambahHistory(const std::string& ekspresi, const std::string& hasil) {
-    gDaftarHistory.push_back({ ekspresi, hasil });
+    const std::string ekspresiFormatted = FormatEkspresiHistory(ekspresi);
+    const std::string hasilFormatted = FormatHasilHistory(hasil);
+    if (ekspresiFormatted.empty() || hasilFormatted.empty()) {
+        return;
+    }
+
+    gDaftarHistory.push_back({ ekspresiFormatted, hasilFormatted });
+    TerapkanBatasHistory();
     RefreshHistoryList();
 }
 
