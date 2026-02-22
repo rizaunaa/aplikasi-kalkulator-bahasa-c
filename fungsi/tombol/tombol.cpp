@@ -18,12 +18,14 @@ constexpr int kMargin = 40;
 constexpr int kGap = 10;
 constexpr int kDisplayTop = 40;
 constexpr int kDisplayHeight = 90;
+constexpr int kHistoryWidth = 90;
+constexpr int kHistoryHeight = 36;
 
 TombolDef gTombol[] = {
     { ID_BTN_C, "C", 0, 0, 1, 1, nullptr },
     { ID_BTN_BACKSPACE, "<-", 0, 1, 1, 1, nullptr },
     { ID_BTN_BAGI, "/", 0, 2, 1, 1, nullptr },
-    { ID_BTN_KALI, "*", 0, 3, 1, 1, nullptr },
+    { ID_BTN_KALI, "x", 0, 3, 1, 1, nullptr },
     { ID_BTN_7, "7", 1, 0, 1, 1, nullptr },
     { ID_BTN_8, "8", 1, 1, 1, 1, nullptr },
     { ID_BTN_9, "9", 1, 2, 1, 1, nullptr },
@@ -39,6 +41,8 @@ TombolDef gTombol[] = {
     { ID_BTN_0, "0", 4, 0, 1, 2, nullptr },
     { ID_BTN_KOMA, ",", 4, 2, 1, 1, nullptr }
 };
+
+HWND gHistoryButton = nullptr;
 
 }  // namespace
 
@@ -60,6 +64,21 @@ void BuatTombolKalkulator(HWND parent) {
             nullptr
         );
     }
+
+    gHistoryButton = CreateWindowExA(
+        0,
+        "BUTTON",
+        "History",
+        WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+        0,
+        0,
+        0,
+        0,
+        parent,
+        reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID_BTN_HISTORY)),
+        GetModuleHandle(nullptr),
+        nullptr
+    );
 }
 
 // Menghitung dan menerapkan posisi tombol dalam grid.
@@ -88,6 +107,12 @@ void TataLetakTombol(HWND parent, const RECT& clientRect) {
         const int h = tombol.rowSpan * cellHeight + (tombol.rowSpan - 1) * kGap;
 
         MoveWindow(tombol.hwnd, x, y, w, h, TRUE);
+    }
+
+    if (gHistoryButton) {
+        const int historyX = clientWidth - kMargin - kHistoryWidth;
+        const int historyY = kDisplayTop + (kDisplayHeight - kHistoryHeight) / 2;
+        MoveWindow(gHistoryButton, historyX, historyY, kHistoryWidth, kHistoryHeight, TRUE);
     }
 
     InvalidateRect(parent, nullptr, TRUE);

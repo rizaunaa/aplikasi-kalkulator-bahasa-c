@@ -2,10 +2,11 @@
 
 // Menampilkan teks angka di tengah area yang diberikan.
 void DisplayAngka(HDC hdc, const RECT& rect, const char* angka) {
+    const int historyReserveWidth = 110;
     RECT area = rect;
     area.left += 40;
     area.top += 40;
-    area.right -= 40;
+    area.right -= (40 + historyReserveWidth);
     area.bottom = area.top + 90;
 
     HPEN borderPen = CreatePen(PS_SOLID, 2, RGB(60, 60, 60));

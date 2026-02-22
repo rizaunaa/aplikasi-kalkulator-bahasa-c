@@ -22,7 +22,8 @@ enum TombolId {
     ID_BTN_3,
     ID_BTN_SAMA_DENGAN,
     ID_BTN_0,
-    ID_BTN_KOMA
+    ID_BTN_KOMA,
+    ID_BTN_HISTORY
 };
 
 // Membuat semua tombol kalkulator.

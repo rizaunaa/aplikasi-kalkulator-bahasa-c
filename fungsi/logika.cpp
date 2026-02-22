@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "history/history.h"
 #include "tombol/tombol.h"
 
 namespace {
@@ -197,13 +198,16 @@ void HitungHasil() {
     if (gDisplayText.empty() || IsOperator(gDisplayText.back())) {
         return;
     }
+    const std::string ekspresi = gDisplayText;
     double hasil = 0.0;
     if (!HitungEkspresi(gDisplayText, &hasil)) {
         gDisplayText = "Error";
         gBaruHasil = true;
+        TambahHistory(ekspresi, "Error");
         return;
     }
     gDisplayText = FormatHasil(hasil);
+    TambahHistory(ekspresi, gDisplayText);
     gBaruHasil = true;
 }
 

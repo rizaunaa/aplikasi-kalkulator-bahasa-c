@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "fungsi/display/display.h"
+#include "fungsi/history/history.h"
 #include "fungsi/logika.h"
 #include "fungsi/tombol/tombol.h"
 
@@ -17,6 +18,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_COMMAND: {
             const int id = LOWORD(wParam);
+            if (id == ID_BTN_HISTORY) {
+                TampilkanHistoryTabel(hwnd);
+                return 0;
+            }
             if (id >= ID_BTN_C && id <= ID_BTN_KOMA) {
                 ProsesTombolKalkulator(id);
                 InvalidateRect(hwnd, nullptr, TRUE);
