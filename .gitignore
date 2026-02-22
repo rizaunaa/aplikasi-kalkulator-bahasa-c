@@ -18,6 +18,7 @@ Release/
 x64/
 x86/
 build/
+scripts/
 
 # Opsional: kalau tidak mau commit setting lokal VS Code
 .vscode/*
@@ -32,3 +33,4 @@ build/
 *.ico
 *.rc
 *.res
+*.txt
