@@ -4,22 +4,71 @@
 #include "fungsi/logika.h"
 #include "fungsi/tombol/tombol.h"
 
+// Menghitung posisi tengah layar berdasarkan work area desktop.
+POINT HitungPosisiTengahLayar(int width, int height) {
+    RECT workArea = {};
+    SystemParametersInfoA(SPI_GETWORKAREA, 0, &workArea, 0);
+
+    POINT p = {};
+    p.x = workArea.left + ((workArea.right - workArea.left) - width) / 2;
+    p.y = workArea.top + ((workArea.bottom - workArea.top) - height) / 2;
+    return p;
+}
+
+// Menghitung area kalkulator di sisi kiri saat history panel tampil.
+RECT AmbilAreaKalkulator(const RECT& clientRect) {
+    RECT area = clientRect;
+    if (IsHistoryPanelVisible()) {
+        area.right -= AmbilLebarHistoryPanel();
+    }
+    return area;
+}
+
 // Menangani event utama window, termasuk proses gambar ulang.
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
             BuatTombolKalkulator(hwnd);
+            InisialisasiHistoryPanel(hwnd);
             return 0;
-        case WM_SIZE:
+        case WM_SIZE: {
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
-            TataLetakTombol(hwnd, clientRect);
+            const RECT areaKalkulator = AmbilAreaKalkulator(clientRect);
+            TataLetakTombol(hwnd, areaKalkulator);
+            TataLetakHistoryPanel(clientRect);
             InvalidateRect(hwnd, nullptr, TRUE);
             return 0;
+        }
         case WM_COMMAND: {
             const int id = LOWORD(wParam);
             if (id == ID_BTN_HISTORY) {
-                TampilkanHistoryTabel(hwnd);
+                const bool sebelumnyaVisible = IsHistoryPanelVisible();
+                ToggleHistoryPanel();
+
+                RECT windowRect;
+                GetWindowRect(hwnd, &windowRect);
+                const int tinggiWindow = windowRect.bottom - windowRect.top;
+                int lebarWindowBaru = windowRect.right - windowRect.left;
+
+                if (!sebelumnyaVisible && IsHistoryPanelVisible()) {
+                    lebarWindowBaru += AmbilLebarHistoryPanel();
+                } else if (sebelumnyaVisible && !IsHistoryPanelVisible()) {
+                    lebarWindowBaru -= AmbilLebarHistoryPanel();
+                }
+
+                if (lebarWindowBaru < 400) {
+                    lebarWindowBaru = 400;
+                }
+
+                SetWindowPos(hwnd, nullptr, windowRect.left, windowRect.top, lebarWindowBaru, tinggiWindow, SWP_NOZORDER);
+
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                const RECT areaKalkulator = AmbilAreaKalkulator(clientRect);
+                TataLetakTombol(hwnd, areaKalkulator);
+                TataLetakHistoryPanel(clientRect);
+                InvalidateRect(hwnd, nullptr, TRUE);
                 return 0;
             }
             if (id >= ID_BTN_C && id <= ID_BTN_KOMA) {
@@ -34,7 +83,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             RECT rect;
             GetClientRect(hwnd, &rect);
-            DisplayAngka(hdc, rect, AmbilDisplayText());
+            const RECT areaKalkulator = AmbilAreaKalkulator(rect);
+            DisplayAngka(hdc, areaKalkulator, AmbilDisplayText());
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -50,6 +100,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 // Membuat window aplikasi lalu menjalankan message loop.
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     const char CLASS_NAME[] = "EmptyWindowClass";
+    const int windowWidth = 400;
+    const int windowHeight = 500;
+    const POINT posisiAwal = HitungPosisiTengahLayar(windowWidth, windowHeight);
 
     WNDCLASSA wc = {};
     wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -66,10 +119,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         CLASS_NAME,
         "Kalkulator",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        400,
-        500,
+        posisiAwal.x,
+        posisiAwal.y,
+        windowWidth,
+        windowHeight,
         nullptr,
         nullptr,
         hInstance,
