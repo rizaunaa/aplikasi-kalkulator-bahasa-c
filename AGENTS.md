@@ -1,0 +1,1 @@
+# tambahkan komentar setiap fungsi

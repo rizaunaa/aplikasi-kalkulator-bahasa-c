@@ -1,0 +1,29 @@
+Release Checklist - Kalkulator Homebase
+======================================
+
+Build release:
+1. Buka "x64 Native Tools Command Prompt for VS 2022".
+2. Masuk ke folder project.
+3. Jalankan: scripts\build_release.bat
+4. Pastikan file keluar di: dist\release\Kalkulator.exe
+
+Uji di mesin lain (clean machine):
+1. Copy hanya file: Kalkulator.exe
+2. Jalankan aplikasi.
+3. Verifikasi:
+   - Window terbuka normal.
+   - Semua tombol bisa diklik.
+   - Input keyboard berfungsi (angka/operator/Enter/Backspace/Escape).
+   - History bisa tampil/sembunyi.
+   - Shortcut Ctrl+L clear history.
+   - Operasi penting:
+     a) 1,0+2 = 3
+     b) -10+3 = -7
+     c) 2/0 = Error
+4. Resize window kecil/besar: layout tetap rapi.
+5. Tutup dan buka lagi: aplikasi tetap normal.
+
+Jika gagal dibuka di mesin lain:
+1. Pastikan build release pakai /MT (sudah ada di script).
+2. Cek antivirus/SmartScreen.
+3. Coba jalankan dari folder lokal non-network.

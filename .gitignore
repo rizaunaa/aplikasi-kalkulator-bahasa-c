@@ -1,4 +1,4 @@
-# Build output
+# Artefak build C/C++
 *.obj
 *.exe
 *.pdb
@@ -6,31 +6,24 @@
 *.idb
 *.lib
 *.exp
+*.res
 
-# VS build cache
+# Cache/temporary Visual Studio dan compiler
 *.tlog
 *.lastbuildstate
 *.log
 
-# Folder build umum
+# Folder output build
 Debug/
 Release/
 x64/
 x86/
 build/
-scripts/
+dist/
 
-# Opsional: kalau tidak mau commit setting lokal VS Code
+# VS Code: simpan config penting, abaikan sisanya
 .vscode/*
 !.vscode/launch.json
 !.vscode/tasks.json
 !.vscode/extensions.json
-
-#ai
-*.md
-
-#icon
-*.ico
-*.rc
-*.res
-*.txt
+!.vscode/c_cpp_properties.json
