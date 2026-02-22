@@ -15,6 +15,11 @@ std::string gDisplayText = "0";
 // Menandai bahwa nilai saat ini adalah hasil perhitungan.
 bool gBaruHasil = false;
 
+// Mengecek apakah display sedang menampilkan state error.
+bool IsDisplayError() {
+    return gDisplayText == "Error";
+}
+
 // Mengecek apakah karakter adalah operator matematika.
 bool IsOperator(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/';
@@ -43,6 +48,9 @@ std::string FormatHasil(double value) {
 // Mengubah token angka berkoma menjadi nilai double.
 bool ParseTokenAngka(const std::string& token, double* out) {
     if (token.empty() || out == nullptr) {
+        return false;
+    }
+    if (token == "-" || token == "," || token == "-,") {
         return false;
     }
     std::string normalized = token;
@@ -133,7 +141,7 @@ bool HitungEkspresi(const std::string& ekspresi, double* out) {
 
 // Menambah digit angka ke teks display.
 void TambahDigit(char digit) {
-    if (gDisplayText == "0" || gBaruHasil) {
+    if (IsDisplayError() || gDisplayText == "0" || gBaruHasil) {
         gDisplayText.assign(1, digit);
         gBaruHasil = false;
         return;
@@ -143,8 +151,19 @@ void TambahDigit(char digit) {
 
 // Menambah operator, sekaligus mencegah operator ganda di akhir ekspresi.
 void TambahOperator(char operasi) {
+    if (IsDisplayError()) {
+        gDisplayText = "0";
+        gBaruHasil = false;
+    }
     if (gDisplayText.empty()) {
         return;
+    }
+    if (gDisplayText == "0" && operasi == '-') {
+        gDisplayText = "-";
+        return;
+    }
+    if (gDisplayText.back() == ',') {
+        gDisplayText.push_back('0');
     }
     if (IsOperator(gDisplayText.back())) {
         gDisplayText.back() = operasi;
@@ -156,7 +175,7 @@ void TambahOperator(char operasi) {
 
 // Menambah koma desimal pada angka aktif.
 void TambahKoma() {
-    if (gBaruHasil) {
+    if (IsDisplayError() || gBaruHasil) {
         gDisplayText = "0";
         gBaruHasil = false;
     }
@@ -174,7 +193,7 @@ void TambahKoma() {
 
 // Menghapus satu karakter terakhir.
 void HapusSatuKarakter() {
-    if (gBaruHasil) {
+    if (IsDisplayError() || gBaruHasil) {
         gDisplayText = "0";
         gBaruHasil = false;
         return;
@@ -197,6 +216,9 @@ void ResetDisplay() {
 void HitungHasil() {
     if (gDisplayText.empty() || IsOperator(gDisplayText.back())) {
         return;
+    }
+    if (gDisplayText.back() == ',') {
+        gDisplayText.push_back('0');
     }
     const std::string ekspresi = gDisplayText;
     double hasil = 0.0;
