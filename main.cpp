@@ -2,6 +2,7 @@
 #include "fungsi/display/display.h"
 #include "fungsi/history/history.h"
 #include "fungsi/logika.h"
+#include "fungsi/tombol/keyboard.h"
 #include "fungsi/tombol/tombol.h"
 
 // Memuat icon dari file proyek, fallback ke icon aplikasi default.
@@ -35,77 +36,113 @@ RECT AmbilAreaKalkulator(const RECT& clientRect) {
     return area;
 }
 
+// Menata ulang layout kalkulator dan panel history berdasarkan ukuran terbaru.
+void TataUlangLayout(HWND hwnd) {
+    RECT clientRect;
+    GetClientRect(hwnd, &clientRect);
+    const RECT areaKalkulator = AmbilAreaKalkulator(clientRect);
+    TataLetakTombol(hwnd, areaKalkulator);
+    TataLetakHistoryPanel(clientRect);
+    InvalidateRect(hwnd, nullptr, TRUE);
+}
+
+// Menampilkan/menyembunyikan history lalu mengubah lebar window sesuai panel.
+void ToggleHistoryDanResize(HWND hwnd) {
+    const bool sebelumnyaVisible = IsHistoryPanelVisible();
+    ToggleHistoryPanel();
+
+    RECT windowRect;
+    GetWindowRect(hwnd, &windowRect);
+    const int tinggiWindow = windowRect.bottom - windowRect.top;
+    int lebarWindowBaru = windowRect.right - windowRect.left;
+
+    if (!sebelumnyaVisible && IsHistoryPanelVisible()) {
+        lebarWindowBaru += AmbilLebarHistoryPanel();
+    } else if (sebelumnyaVisible && !IsHistoryPanelVisible()) {
+        lebarWindowBaru -= AmbilLebarHistoryPanel();
+    }
+
+    if (lebarWindowBaru < 400) {
+        lebarWindowBaru = 400;
+    }
+
+    SetWindowPos(hwnd, nullptr, windowRect.left, windowRect.top, lebarWindowBaru, tinggiWindow, SWP_NOZORDER);
+    TataUlangLayout(hwnd);
+}
+
+// Memproses aksi kalkulator dari tombol UI maupun keyboard.
+void ProsesAksiKalkulator(HWND hwnd, int id) {
+    if (id == ID_BTN_HISTORY) {
+        ToggleHistoryDanResize(hwnd);
+        return;
+    }
+    if (id >= ID_BTN_C && id <= ID_BTN_KOMA) {
+        ProsesTombolKalkulator(id);
+        InvalidateRect(hwnd, nullptr, TRUE);
+    }
+}
+
+// Menangani event keyboard keydown agar switch-case utama lebih sederhana.
+LRESULT TanganiKeyDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    const int id = AmbilIdTombolDariKeyDown(wParam);
+    if (id != 0) {
+        ProsesAksiKalkulator(hwnd, id);
+        return 0;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+// Menangani event keyboard karakter agar switch-case utama lebih sederhana.
+LRESULT TanganiChar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    const int id = AmbilIdTombolDariChar(wParam);
+    if (id != 0) {
+        ProsesAksiKalkulator(hwnd, id);
+        return 0;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
 // Menangani event utama window, termasuk proses gambar ulang.
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_CREATE:
-            BuatTombolKalkulator(hwnd);
-            InisialisasiHistoryPanel(hwnd);
-            return 0;
-        case WM_SIZE: {
-            RECT clientRect;
-            GetClientRect(hwnd, &clientRect);
-            const RECT areaKalkulator = AmbilAreaKalkulator(clientRect);
-            TataLetakTombol(hwnd, areaKalkulator);
-            TataLetakHistoryPanel(clientRect);
-            InvalidateRect(hwnd, nullptr, TRUE);
-            return 0;
-        }
-        case WM_COMMAND: {
-            const int id = LOWORD(wParam);
-            if (id == ID_BTN_HISTORY) {
-                const bool sebelumnyaVisible = IsHistoryPanelVisible();
-                ToggleHistoryPanel();
-
-                RECT windowRect;
-                GetWindowRect(hwnd, &windowRect);
-                const int tinggiWindow = windowRect.bottom - windowRect.top;
-                int lebarWindowBaru = windowRect.right - windowRect.left;
-
-                if (!sebelumnyaVisible && IsHistoryPanelVisible()) {
-                    lebarWindowBaru += AmbilLebarHistoryPanel();
-                } else if (sebelumnyaVisible && !IsHistoryPanelVisible()) {
-                    lebarWindowBaru -= AmbilLebarHistoryPanel();
-                }
-
-                if (lebarWindowBaru < 400) {
-                    lebarWindowBaru = 400;
-                }
-
-                SetWindowPos(hwnd, nullptr, windowRect.left, windowRect.top, lebarWindowBaru, tinggiWindow, SWP_NOZORDER);
-
-                RECT clientRect;
-                GetClientRect(hwnd, &clientRect);
-                const RECT areaKalkulator = AmbilAreaKalkulator(clientRect);
-                TataLetakTombol(hwnd, areaKalkulator);
-                TataLetakHistoryPanel(clientRect);
-                InvalidateRect(hwnd, nullptr, TRUE);
-                return 0;
-            }
-            if (id >= ID_BTN_C && id <= ID_BTN_KOMA) {
-                ProsesTombolKalkulator(id);
-                InvalidateRect(hwnd, nullptr, TRUE);
-            }
-            return 0;
-        }
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-            const RECT areaKalkulator = AmbilAreaKalkulator(rect);
-            DisplayAngka(hdc, areaKalkulator, AmbilDisplayText());
-
-            EndPaint(hwnd, &ps);
-            return 0;
-        }
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    if (uMsg == WM_CREATE) {
+        BuatTombolKalkulator(hwnd);
+        InisialisasiHistoryPanel(hwnd);
+        SetFocus(hwnd);
+        return 0;
     }
+    if (uMsg == WM_SIZE) {
+        TataUlangLayout(hwnd);
+        return 0;
+    }
+    if (uMsg == WM_COMMAND) {
+        const int id = LOWORD(wParam);
+        ProsesAksiKalkulator(hwnd, id);
+        SetFocus(hwnd);
+        return 0;
+    }
+    if (uMsg == WM_KEYDOWN) {
+        return TanganiKeyDown(hwnd, uMsg, wParam, lParam);
+    }
+    if (uMsg == WM_CHAR) {
+        return TanganiChar(hwnd, uMsg, wParam, lParam);
+    }
+    if (uMsg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+
+        RECT rect;
+        GetClientRect(hwnd, &rect);
+        const RECT areaKalkulator = AmbilAreaKalkulator(rect);
+        DisplayAngka(hdc, areaKalkulator, AmbilDisplayText());
+
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    if (uMsg == WM_DESTROY) {
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 // Membuat window aplikasi lalu menjalankan message loop.
