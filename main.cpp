@@ -4,6 +4,17 @@
 #include "fungsi/logika.h"
 #include "fungsi/tombol/tombol.h"
 
+// Memuat icon dari file proyek, fallback ke icon aplikasi default.
+HICON MuatIconAplikasi(int size) {
+    HICON icon = static_cast<HICON>(
+        LoadImageA(nullptr, "icon.ico", IMAGE_ICON, size, size, LR_LOADFROMFILE)
+    );
+    if (!icon) {
+        icon = LoadIcon(nullptr, IDI_APPLICATION);
+    }
+    return icon;
+}
+
 // Menghitung posisi tengah layar berdasarkan work area desktop.
 POINT HitungPosisiTengahLayar(int width, int height) {
     RECT workArea = {};
@@ -103,16 +114,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     const int windowWidth = 400;
     const int windowHeight = 500;
     const POINT posisiAwal = HitungPosisiTengahLayar(windowWidth, windowHeight);
+    HICON iconBesar = MuatIconAplikasi(32);
+    HICON iconKecil = MuatIconAplikasi(16);
 
-    WNDCLASSA wc = {};
+    WNDCLASSEXA wc = {};
+    wc.cbSize = sizeof(WNDCLASSEXA);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+    wc.hIcon = iconBesar;
+    wc.hIconSm = iconKecil;
 
-    RegisterClassA(&wc);
+    RegisterClassExA(&wc);
 
     HWND hwnd = CreateWindowExA(
         0,
@@ -133,6 +149,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         return 0;
     }
 
+    SendMessage(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(iconBesar));
+    SendMessage(hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(iconKecil));
     SetWindowTextA(hwnd, "Kalkulator");
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);

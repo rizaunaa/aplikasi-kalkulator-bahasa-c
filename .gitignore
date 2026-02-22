@@ -24,7 +24,11 @@ build/
 !.vscode/launch.json
 !.vscode/tasks.json
 !.vscode/extensions.json
-.vscode/*
 
 #ai
 *.md
+
+#icon
+*.ico
+*.rc
+*.res
