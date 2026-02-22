@@ -20,9 +20,35 @@ HWND gParentWindow = nullptr;
 HWND gHistoryListView = nullptr;
 // Menyimpan status tampil/sembunyi panel history.
 bool gHistoryVisible = false;
+// Menyimpan font panel history.
+HFONT gHistoryFont = nullptr;
 
 constexpr int kHistoryPanelWidth = 320;
 constexpr int kPanelMargin = 12;
+
+// Membuat font panel history agar konsisten dengan komponen lain.
+HFONT BuatFontHistory(HWND parent) {
+    HDC hdc = GetDC(parent);
+    const int tinggiPx = -MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    ReleaseDC(parent, hdc);
+
+    return CreateFontA(
+        tinggiPx,
+        0,
+        0,
+        0,
+        FW_NORMAL,
+        FALSE,
+        FALSE,
+        FALSE,
+        DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS,
+        CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY,
+        DEFAULT_PITCH | FF_SWISS,
+        "Segoe UI"
+    );
+}
 
 // Mengisi ulang konten ListView dari data history saat ini.
 void RefreshHistoryList() {
@@ -89,6 +115,9 @@ void SetupHistoryColumns() {
 // Inisialisasi panel history di dalam window utama.
 void InisialisasiHistoryPanel(HWND parent) {
     gParentWindow = parent;
+    if (!gHistoryFont) {
+        gHistoryFont = BuatFontHistory(parent);
+    }
 
     INITCOMMONCONTROLSEX icex = {};
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -111,6 +140,10 @@ void InisialisasiHistoryPanel(HWND parent) {
     );
 
     SendMessageA(gHistoryListView, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+    SendMessageA(gHistoryListView, WM_SETFONT, reinterpret_cast<WPARAM>(gHistoryFont), TRUE);
+    SendMessageA(gHistoryListView, LVM_SETBKCOLOR, 0, RGB(252, 252, 252));
+    SendMessageA(gHistoryListView, LVM_SETTEXTBKCOLOR, 0, RGB(252, 252, 252));
+    SendMessageA(gHistoryListView, LVM_SETTEXTCOLOR, 0, RGB(35, 35, 35));
     SetupHistoryColumns();
     RefreshHistoryList();
     ShowWindow(gHistoryListView, SW_HIDE);
